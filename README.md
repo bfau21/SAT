@@ -1,7 +1,7 @@
 # WRITERS
-Benoit Fau
-Mongi Saad Ben Salah
-Artus Deumier
+Benoit Fau.
+Mongi Saad Ben Salah.
+Artus Deumier.
 
 # SatSolverTemplate
 SAT solver template for a course (TP) at INSA Toulouse.
