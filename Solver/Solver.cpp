@@ -6,6 +6,7 @@
 
 #include "Solver.hpp"
 #include "util/exception.hpp"
+#include <iostream>
 
 namespace sat {
     Solver::Solver(unsigned numVariables) : numVariables(numVariables) {
@@ -15,17 +16,52 @@ namespace sat {
 
     bool Solver::addClause(Clause clause) {
         if (clause.empty()) {
-            return false;
+            return false; // Une clause vide est toujours fausse
         }
 
-        ClausePointer clausePointer = std::make_shared<Clause>(std::move(clause));
+        // Vérifie si la clause est unitaire
+        if (clause.size() == 1) {
+            Literal unitLiteral = clause[0];
+            if (!assign(unitLiteral)) {
+                return false; // La clause unitaire viole le modèle actuel
+            }
+        }
 
-        clauses.push_back(std::make_shared<Clause>(clause));
+        // Ajoute la clause dans le vecteur des clauses
+        clauses.push_back(std::make_shared<Clause>(std::move(clause)));
         return true;
     }
 
     auto Solver::rebase() const -> std::vector<Clause> {
-        throw NOT_IMPLEMENTED;
+        std::vector<Clause> reducedClauses;
+
+        for (const auto& clausePtr : clauses) {
+            Clause reducedClause;
+
+            // Liste pour les littéraux satisfaisants
+            std::vector<Literal> satisfiedLiterals;
+
+            // Parcours des littéraux dans la clause
+            for (const auto& literal : *clausePtr) {
+                if (satisfied(literal)) {
+                    satisfiedLiterals.push_back(literal); // Ajoute les littéraux satisfaisants
+                } else if (!falsified(literal)) {
+                    reducedClause.push_back(literal); // Ajoute les littéraux non falsifiés
+                }
+            }
+
+            // Si des littéraux satisfaisants ont été trouvés, on garde seulement ces littéraux
+            if (!satisfiedLiterals.empty()) {
+                reducedClause = satisfiedLiterals; // Remplace la clause par les littéraux satisfaisants
+            }
+
+            // Ajouter la clause réduite à la liste si elle n'est pas vide
+            if (!reducedClause.empty()) {
+                reducedClauses.push_back(std::move(reducedClause));
+            }
+        }
+
+        return reducedClauses;
     }
 
     TruthValue Solver::val(Variable x) const {
@@ -67,6 +103,46 @@ namespace sat {
     }
 
     bool Solver::unitPropagate() {
-        throw NOT_IMPLEMENTED;
+        bool changed = true;
+
+        while (changed) {
+            changed = false;
+
+            for (const auto& clausePtr : clauses) {
+                int undefinedCount = 0;
+                Literal unitLiteral = 0;
+                bool clauseSatisfied = false;
+
+                for (const Literal& lit : *clausePtr) {
+                    if (satisfied(lit)) {
+                        clauseSatisfied = true; // Clause satisfaite, passe à la suivante
+                        break;
+                    }
+                    if (!falsified(lit)) {
+                        ++undefinedCount;
+                        unitLiteral = lit;
+                    }
+                }
+
+                if (clauseSatisfied) {
+                    continue; // Clause déjà satisfaite, pas besoin de la traiter
+                }
+
+                if (undefinedCount == 0) {
+                    // Tous les littéraux sont falsifiés : conflit détecté
+                    return false;
+                }
+
+                if (undefinedCount == 1) {
+                    // Clause unitaire détectée, assignation nécessaire
+                    if (!assign(unitLiteral)) {
+                        return false; // Propagation échoue
+                    }
+                    changed = true;
+                }
+            }
+        }
+
+        return true;
     }
 } // sat

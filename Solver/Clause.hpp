@@ -35,6 +35,8 @@ namespace sat {
      */
     using Clause = std::vector<Literal>;
     
+    // Déclaration de la surcharge de l'opérateur <<
+    std::ostream& operator<<(std::ostream& os, const Clause& clause);
 }
 
 
