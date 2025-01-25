@@ -32,9 +32,9 @@ TEST(structures, conversion_var_lit) {
     Variable x = 2;
     EXPECT_EQ(pos(x), 5);
     EXPECT_EQ(neg(x), 4);
-    // EXPECT_EQ(var(pos(x)), x);
-    // EXPECT_EQ(var(neg(x)), x);
-    // EXPECT_EQ(var(7), 3);
+    EXPECT_EQ(var(pos(x)), x);
+    EXPECT_EQ(var(neg(x)), x);
+    EXPECT_EQ(var(7), 3);
 }
 
 #ifndef __RUN_ALL_TESTS__
