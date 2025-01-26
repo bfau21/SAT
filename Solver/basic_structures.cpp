@@ -7,6 +7,7 @@
 #include "basic_structures.hpp"
 #include "util/exception.hpp"
 #include <ostream>
+#include <set>
 
 namespace sat {
     // @TODO implementation here
@@ -67,4 +68,9 @@ namespace sat {
         os << (literal.sign()==1 ? "" : "-") << literal.get();
         return os;
     }
+
+    bool Literal::operator<(const Literal& other) const {
+        return lit < other.lit;
+    }
+
 }

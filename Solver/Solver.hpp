@@ -35,6 +35,8 @@ namespace sat {
         std::vector<bool> assigned;
         std::vector<Literal> trail;
         std::vector<ClausePointer> clauses;
+        std::vector<int> counters; // Compteur pour chaque variable
+        std::vector<Literal> unitLiterals; //list littéraux unitaires
 
     public:
 

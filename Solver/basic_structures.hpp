@@ -9,6 +9,7 @@
 #define BASIC_STRUCTURES_HPP
 
 #include <ostream>
+#include <set>
 
 /* These are only the declarations of the classes and their members
  * @TODO implementation in basic_structures.cpp
@@ -91,6 +92,9 @@ namespace sat {
          * @return True if both literals are exactly the same (sign and variable)
          */
         bool operator==(Literal) const;
+
+        // Définir l'opérateur <
+        bool operator<(const Literal& other) const;
     };
 
     /**
