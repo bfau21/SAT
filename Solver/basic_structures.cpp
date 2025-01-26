@@ -6,14 +6,11 @@
 
 #include "basic_structures.hpp"
 #include "util/exception.hpp"
-#include <ostream>
-#include <set>
 
 namespace sat {
-    // @TODO implementation here
 
 
-    Variable::Variable(unsigned val){
+    Variable::Variable(unsigned val) {
         this->value = val;
     }
 
@@ -52,7 +49,6 @@ namespace sat {
     }
 
     Literal pos(Variable x) {
-        
         return Literal(x.get()*2+1);
     }
 
@@ -63,14 +59,4 @@ namespace sat {
     Variable var(Literal l) {
         return Variable(l.get()/2);
     }
-
-    std::ostream& operator<<(std::ostream& os, const Literal& literal) {
-        os << (literal.sign()==1 ? "" : "-") << literal.get();
-        return os;
-    }
-
-    bool Literal::operator<(const Literal& other) const {
-        return lit < other.lit;
-    }
-
 }

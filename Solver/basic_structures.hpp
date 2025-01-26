@@ -8,11 +8,7 @@
 #ifndef BASIC_STRUCTURES_HPP
 #define BASIC_STRUCTURES_HPP
 
-#include <ostream>
-#include <set>
-
 /* These are only the declarations of the classes and their members
- * @TODO implementation in basic_structures.cpp
  */
 
 namespace sat {
@@ -21,7 +17,7 @@ namespace sat {
      * @brief Represents a truth value
      */
     enum class TruthValue {
-        False = -1, ///< variable is false;
+        False = -1, ///< variable is true
         Undefined = 0, ///< variable is unassigned
         True = 1 ///< variable is true
     };
@@ -92,9 +88,6 @@ namespace sat {
          * @return True if both literals are exactly the same (sign and variable)
          */
         bool operator==(Literal) const;
-
-        // Définir l'opérateur <
-        bool operator<(const Literal& other) const;
     };
 
     /**
@@ -117,9 +110,6 @@ namespace sat {
      * @return Variable of given Literal
      */
     Variable var(Literal l);
-
-    // Déclaration de la surcharge de l'opérateur <<
-    std::ostream& operator<<(std::ostream& os, const Literal& literal);
 
 }
 

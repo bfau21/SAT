@@ -59,10 +59,8 @@ void testEquality(std::vector<std::vector<sat::Literal>> groundTruth, const std:
 TEST(unit_propagation, problem1) {
     using namespace sat;
     auto solver = loadSolver(test::TestData::UnitPropagationProblem1);
-    auto gt = loadSolution(test::TestData::UnitPropagationSolution1);
-    testEquality(std::move(gt), solver.rebase());
     ASSERT_TRUE(solver.unitPropagate()) << "Unit propagation failed";
-    //auto gt = loadSolution(test::TestData::UnitPropagationSolution1);
+    auto gt = loadSolution(test::TestData::UnitPropagationSolution1);
     testEquality(std::move(gt), solver.rebase());
 }
 

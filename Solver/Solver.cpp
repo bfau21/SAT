@@ -6,15 +6,11 @@
 
 #include "Solver.hpp"
 #include "util/exception.hpp"
-#include <iostream>
-#include <queue>
-#include <set>
 
 namespace sat {
-    Solver::Solver(unsigned numVariables) : numVariables(numVariables), counters(numVariables, 0) {
+    Solver::Solver(unsigned numVariables) {
+        this->numVariables = numVariables;
         model.resize(numVariables, TruthValue::Undefined);
-        assigned.resize(numVariables, false);
-        unitLiterals.clear();
     }
 
     bool Solver::addClause(Clause clause) {
@@ -22,30 +18,12 @@ namespace sat {
             return false;
         }
 
-        // Mise à jour des compteurs pour les variables dans la clause
-        for (const auto& literal : clause) {
-            counters[sat::var(literal).get()]++;
-        }
-
-        // Vérifie si la clause est unitaire
         if (clause.size() == 1) {
             Literal unitLiteral = clause[0];
-
-            // Vérifie si la clause unitaire existe déjà dans les clauses
-            for (const auto& existingClause : clauses) {
-                if (existingClause->size() == 1 && existingClause->front() == unitLiteral) {
-                    // Si la clause unitaire existe déjà, ne pas l'ajouter
-                    return true; // La clause est ignorée, donc on considère que l'ajout est réussi
-                }
-            }
-
-            // Si la clause unitaire n'existe pas, on l'assigne
             if (!assign(unitLiteral)) {
                 return false; // La clause unitaire viole le modèle actuel
             }
-            }
-
-        // Ajoute la clause dans le vecteur des clauses
+        }
         clauses.push_back(std::make_shared<Clause>(std::move(clause)));
         return true;
     }
@@ -55,23 +33,18 @@ namespace sat {
 
         for (const auto& clausePtr : clauses) {
             Clause reducedClause;
-            std::set<Literal> uniqueSatisfiedLiterals; // Utilisé pour éviter les doublons
 
             for (const auto& literal : *clausePtr) {
                 if (satisfied(literal)) {
-                    uniqueSatisfiedLiterals.insert(literal); // Ajoute le littéral satisfaisant (sans doublon)
-                } else if (!falsified(literal)) {
-                    reducedClause.push_back(literal); // Ajoute les littéraux non falsifiés
+                    reducedClause.clear();
+                    reducedClause.push_back(literal);
+                    break;
+                }
+                else if (!falsified(literal)) {
+                    reducedClause.push_back(literal);
                 }
             }
-
-            // Crée une clause unitaire pour chaque littéral satisfaisant
-            for (const auto& satisfiedLiteral : uniqueSatisfiedLiterals) {
-                reducedClauses.push_back({satisfiedLiteral}); // Clause unitaire
-            }
-
-            // Si aucun littéral satisfaisant n'a été trouvé, ajoute la clause réduite si elle n'est pas vide
-            if (uniqueSatisfiedLiterals.empty() && !reducedClause.empty()) {
+            if (!reducedClause.empty()) {
                 reducedClauses.push_back(std::move(reducedClause));
             }
         }
@@ -102,45 +75,48 @@ namespace sat {
 
     bool Solver::assign(Literal l) {
         Variable var = sat::var(l);
+        TruthValue value = val(var);
         unsigned varIndex = var.get();
 
-        if (assigned[varIndex]) {
+        if (value != TruthValue::Undefined){
             return satisfied(l);
         }
 
         model[varIndex] = l.sign() == 1 ? TruthValue::True : TruthValue::False;
-        assigned[varIndex] = true;
-        unitLiterals.push_back(l);
-
-        //backtracking
-        trail.push_back(l);
         return true;
     }
 
     bool Solver::unitPropagate() {
-        bool resultat = true;
+        std::vector<Clause> unitClauses;
+        std::vector<Clause> newClauses;
 
-    while (!unitLiterals.empty()) {
-        Literal unit = unitLiterals.back();
-        unitLiterals.pop_back();
-
-        if (!assign(unit)) {
-            return false;
-        }
-
-        std::vector<Clause> new_clauses = rebase();
-
-        for (const auto& clause : new_clauses) {
-            resultat = resultat && addClause(clause);
-            if (clause.size() == 1) {
-                Literal lit = clause[0];
-                if (val(var(lit)) == TruthValue::Undefined) {
-                    unitLiterals.push_back(lit);
-                }
+        for (const auto& clausePtr : clauses) {
+            if (clausePtr->size()==1) {
+                unitClauses.push_back(std::move(*clausePtr));
             }
         }
 
-    }
-    return resultat;
+        while (!unitClauses.empty()) {
+            Clause unitClause = unitClauses.back();
+            unitClauses.pop_back();
+            Literal l = unitClause[0];
+
+            if (!assign(l)) {
+                return false;
+            }
+
+            newClauses = rebase();
+            clauses.clear();
+            for (const auto& clause : newClauses) {
+                addClause(clause);
+            }
+
+            for (const auto& clausePtr : clauses) {
+                if (clausePtr->size()==1) {
+                    unitClauses.push_back(std::move(*clausePtr));
+                }
+            }     
+        }
+        return true;
     }
 } // sat
